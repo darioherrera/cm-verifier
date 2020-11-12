@@ -49,8 +49,6 @@ const updateMany = (list) => {
             return await Repository.findOneAndUpdate({ url: `${site.url}/` }, { ...site, valid: "checked" });
         }
     });
-
-
 }
 
 const checkURL = url => {
@@ -74,7 +72,7 @@ const validateURL = async list => {
         }
     })
 
-    results.map(x => console.log(x));
+    console.log(`Se han actualizado: ${results.length} registros`)
     return results;
 }
 
@@ -86,7 +84,7 @@ const updateSites = async(page) => {
         console.log("------ Updating site data ----------")
         let results = await validateURL(list.docs);
         console.log("------ end of site data ----------")
-        //  await updateMany(results);
+         await updateMany(results);
     }
     catch (err) {
         console.log(err);
