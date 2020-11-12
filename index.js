@@ -97,7 +97,7 @@ const updateSites = async (page) => {
     connectDB();
     let { totalPages, page, nextPage } = await getPaginatedList(1);
     let i = 1;
-    var task = cron.schedule('*/15 * * * * *', async () => {
+    var task = cron.schedule('*/30 * * * * *', async () => {
         console.log(`Actualizando página ${i} de ${totalPages} `);
         await updateSites(i++);
     });
