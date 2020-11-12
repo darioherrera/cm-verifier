@@ -3,7 +3,7 @@ const mongoose = require('mongoose');
 const Repository = require("./models/repository");
 const DB_URL = 'mongodb+srv://yebz:y1ENTzl2xzZwenff@wapo-57lcy.mongodb.net/posts?retryWrites=true&w=majority';
 const axios = require("axios");
-
+const { isEmpty } = require("lodash");
 
 const { pick, chain, get } = require("lodash");
 mongoose.promise = require("bluebird");
@@ -12,7 +12,7 @@ function getRandomArbitrary(min, max) {
     return Math.floor(Math.random() * (max - min)) + min;
 }
 
-const connectDB = async() => {
+const connectDB = async () => {
     const conn = await mongoose.connect(DB_URL, {
         useNewUrlParser: true,
         useCreateIndex: true,
@@ -22,14 +22,14 @@ const connectDB = async() => {
     console.log(`MongoDB Connected: ${conn.connection.host}`);
 }
 
-let getListSites = async() => {
+let getListSites = async () => {
     let page = getRandomArbitrary(1, 6666);
     console.log("COUNTER: ", page);
     let list = await Repository.find({ status: { $exists: false }, name: { $exists: false } }, {}, { skip: page, limit: 15 });
     return list;
 }
 
-let getPaginatedList = async(page = 1) => {
+let getPaginatedList = async (page = 1) => {
     let list = await Repository.paginate({ status: { $exists: false }, name: { $exists: false } }, {
         page,
         limit: 15
@@ -38,17 +38,22 @@ let getPaginatedList = async(page = 1) => {
 }
 
 
-const updateMany = (list) => {
+const updateMany = async (list) => {
     console.log(`Updating sites: `, list.length);
-    // console.log(list)
-    list.map(async site => {
-        if (site && site.status === 'rejected') {
-            return await Repository.findOneAndUpdate({ url: site.url }, { status: 'rejected' });
-        }
-        else {
-            return await Repository.findOneAndUpdate({ url: `${site.url}/` }, { ...site, valid: "checked" });
-        }
-    });
+    try {
+        let updateRequests = list.map(async site => {
+            let { url } = site;
+            if (site && site.status === 'rejected') {
+                return await Repository.findOneAndUpdate({ url: /.*url.*/ }, { status: 'rejected' }, { new: false, upsert: false });
+            }
+            else {
+                return await Repository.findOneAndUpdate({ url: /.*url.*/ }, { ...site, valid: "checked" }, { upsert: false });
+            }
+        });
+        return list;
+    } catch (error) {
+        console.log(error);
+    }
 }
 
 const checkURL = url => {
@@ -71,34 +76,29 @@ const validateURL = async list => {
             }
         }
     })
-
-    console.log(`Se han actualizado: ${results.length} registros`)
     return results;
 }
 
-const updateSites = async(page) => {
-
+const updateSites = async (page) => {
     try {
         console.log("------ Fetching sites----------")
         let list = await getPaginatedList(page);
         console.log("------ Updating site data ----------")
         let results = await validateURL(list.docs);
         console.log("------ end of site data ----------")
-         await updateMany(results);
+        let updatePromises = updateMany(results);
     }
     catch (err) {
         console.log(err);
     }
-
 }
 
-(async function() {
+(async function () {
     connectDB();
     let { totalPages, page, nextPage } = await getPaginatedList(1);
     let i = 1;
-    var task = cron.schedule('*/30 * * * * *', async() => {
+    var task = cron.schedule('*/15 * * * * *', async () => {
         console.log(`Actualizando página ${i} de ${totalPages} `);
         await updateSites(i++);
     });
-
 })();
