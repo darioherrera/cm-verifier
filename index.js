@@ -29,6 +29,14 @@ let getListSites = async() => {
     return list;
 }
 
+let getPaginatedList = async(page = 1) => {
+    let list = await Repository.paginate({ status: { $exists: false }, name: { $exists: false } }, {
+        page,
+        limit: 15
+    });
+    return list;
+}
+
 
 const updateMany = (list) => {
     console.log(`Updating sites: `, list.length);
@@ -70,24 +78,29 @@ const validateURL = async list => {
     return results;
 }
 
-const updateSite = async() => {
+const updateSites = async(page) => {
 
     try {
-        let list = await getListSites();
-        console.log("------ updating site data ----------")
-        let results = await validateURL(list);
+        console.log("------ Fetching sites----------")
+        let list = await getPaginatedList(page);
+        console.log("------ Updating site data ----------")
+        let results = await validateURL(list.docs);
         console.log("------ end of site data ----------")
-        await updateMany(results);
+        //  await updateMany(results);
     }
     catch (err) {
         console.log(err);
     }
+
 }
 
 (async function() {
     connectDB();
+    let { totalPages, page, nextPage } = await getPaginatedList(1);
+    let i = 1;
     var task = cron.schedule('*/30 * * * * *', async() => {
-        await updateSite();
+        console.log(`Actualizando página ${i} de ${totalPages} `);
+        await updateSites(i++);
     });
 
 })();
