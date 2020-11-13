@@ -9,8 +9,8 @@ const RepositorySchema = new Schema({
   home: String,
   timezone_string: String,
   status: { type: String, default: "Unchecked" }
-});
+}, { timestamps: true });
 
- RepositorySchema.plugin(mongoosePaginate);
+RepositorySchema.plugin(mongoosePaginate);
 
 module.exports = model("repositories", RepositorySchema);
