@@ -6,7 +6,6 @@ const axios = require("axios");
 const { isEmpty } = require("lodash");
 const urlParser = require("url");
 const PromiseBird = require("bluebird");
-
 const { pick, chain, get } = require("lodash");
 mongoose.promise = require("bluebird");
 
@@ -39,7 +38,7 @@ const updateField = async (site) => {
     if (uri) {
         const regExp = `/.*${uri}/`;
         console.log(uri.hostname);
-        return Repository.update({ url: { $regex: regExp } }, updateQuery, { upsert: false, new: false })
+        return Repository.updateOne({ url: { $regex: regExp } }, updateQuery, { upsert: false, new: false })
     }
     else {
         return Promise.reject(site);
