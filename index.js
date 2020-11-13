@@ -36,7 +36,7 @@ const updateField = async (site) => {
     const uri = urlParser.parse(site.url);
     let updateQuery = (site.status == 'rejected') ? { status: 'rejected' } : { ...site, valid: "checked" };
     if (uri) {
-        const regExp = `/.*${uri}/`;
+        const regExp = `/.*${uri.hostname}/`;
         console.log(uri.hostname);
         return Repository.replaceOne({ url: { $regex: regExp } }, updateQuery, { upsert: false, new: false })
     }
