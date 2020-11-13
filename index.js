@@ -4,6 +4,8 @@ const Repository = require("./models/repository");
 const DB_URL = 'mongodb+srv://yebz:y1ENTzl2xzZwenff@wapo-57lcy.mongodb.net/posts?retryWrites=true&w=majority';
 const axios = require("axios");
 const { isEmpty } = require("lodash");
+const urlParser = require("url");
+const PromiseBird = require("bluebird");
 
 const { pick, chain, get } = require("lodash");
 mongoose.promise = require("bluebird");
@@ -12,7 +14,7 @@ function getRandomArbitrary(min, max) {
     return Math.floor(Math.random() * (max - min)) + min;
 }
 
-const connectDB = async () => {
+const connectDB = async() => {
     const conn = await mongoose.connect(DB_URL, {
         useNewUrlParser: true,
         useCreateIndex: true,
@@ -22,14 +24,7 @@ const connectDB = async () => {
     console.log(`MongoDB Connected: ${conn.connection.host}`);
 }
 
-let getListSites = async () => {
-    let page = getRandomArbitrary(1, 6666);
-    console.log("COUNTER: ", page);
-    let list = await Repository.find({ status: { $exists: false }, name: { $exists: false } }, {}, { skip: page, limit: 15 });
-    return list;
-}
-
-let getPaginatedList = async (page = 1) => {
+let getPaginatedList = async(page = 1) => {
     let list = await Repository.paginate({ status: { $exists: false }, name: { $exists: false } }, {
         page,
         limit: 15
@@ -38,22 +33,24 @@ let getPaginatedList = async (page = 1) => {
 }
 
 
-const updateMany = async (list) => {
-    console.log(`Updating sites: `, list.length);
-    try {
-        let updateRequests = list.map(async site => {
-            let { url } = site;
-            if (site && site.status === 'rejected') {
-                return await Repository.findOneAndUpdate({ url: /.*url.*/ }, { status: 'rejected' }, { new: false, upsert: false });
-            }
-            else {
-                return await Repository.findOneAndUpdate({ url: /.*url.*/ }, { ...site, valid: "checked" }, { upsert: false });
-            }
-        });
-        return list;
-    } catch (error) {
-        console.log(error);
+const updateField = async(site) => {
+    const uri = urlParser.parse(site.url);
+    let updateQuery = (site.status == 'rejected') ? { status: 'rejected' } : { ...site, valid: "checked" };
+    if (uri) {
+        console.log(updateQuery);
+        return Repository.findOneAndReplace({ url: /.*uri.hostname/ }, updateQuery, { upsert: false, new: false })
     }
+    else {
+        return Promise.reject(site);
+    }
+}
+
+const updateMany = async(list) => {
+    console.log(`Updating sites: `, list.length);
+    let updateRequests = list.filter(site => !isEmpty(site))
+        .filter(site => !isEmpty(site.url));
+    let result = await PromiseBird.mapSeries(updateRequests, site => updateField(site));
+    return result;
 }
 
 const checkURL = url => {
@@ -79,26 +76,40 @@ const validateURL = async list => {
     return results;
 }
 
-const updateSites = async (page) => {
+const updateSites = async(page) => {
     try {
         console.log("------ Fetching sites----------")
         let list = await getPaginatedList(page);
         console.log("------ Updating site data ----------")
         let results = await validateURL(list.docs);
         console.log("------ end of site data ----------")
-        let updatePromises = updateMany(results);
+        let updatePromises = await updateMany(results);
+        // console.log(updatePromises);
     }
     catch (err) {
         console.log(err);
     }
 }
 
-(async function () {
+(async function() {
     connectDB();
     let { totalPages, page, nextPage } = await getPaginatedList(1);
-    let i = 1;
-    var task = cron.schedule('*/30 * * * * *', async () => {
-        console.log(`Actualizando página ${i} de ${totalPages} `);
-        await updateSites(i++);
-    });
+    //let i = 200;
+    //var task = cron.schedule('*/10 * * * * *', async() => {
+    //  console.log(`Actualizando página ${i} de ${totalPages} `);
+    //    await updateSites(i++);
+    //});
+    let site = {
+        name: 'Arga',
+        description: 'Agencia de detectives en Madrid',
+        url: 'https://www.argadetectives.com',
+        home: 'https://www.argadetectives.com',
+        timezone_string: '',
+        valid: 'checked'
+    }
+    const uri = urlParser.parse(site.url);
+
+    let val = await Repository.findOne({ url: { $regex: /.*uri.hostname/ } })
+    console.log(val);
+
 })();
