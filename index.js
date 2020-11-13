@@ -38,7 +38,7 @@ const updateField = async (site) => {
     if (uri) {
         const regExp = `/.*${uri}/`;
         console.log(uri.hostname);
-        return Repository.updateOne({ url: { $regex: regExp } }, updateQuery, { upsert: false, new: false })
+        return Repository.replaceOne({ url: { $regex: regExp } }, updateQuery, { upsert: false, new: false })
     }
     else {
         return Promise.reject(site);
