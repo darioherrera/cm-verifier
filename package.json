@@ -12,6 +12,7 @@
     "agenda": "^3.1.0",
     "axios": "^0.21.0",
     "bluebird": "^3.7.2",
+    "crawler": "^1.2.2",
     "express": "^4.17.1",
     "got": "^11.8.0",
     "is-up": "^4.0.0",
@@ -20,6 +21,8 @@
     "mongoose": "^5.10.13",
     "mongoose-paginate-v2": "^1.3.11",
     "node-cron": "^2.0.3",
+    "node-scrapy": "^0.5.0",
+    "promised-csv": "^1.0.1",
     "wpapi": "^1.2.1"
   }
 }
