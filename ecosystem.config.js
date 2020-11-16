@@ -1,9 +1,8 @@
 module.exports = {
   apps: [{
     name: 'verifier',
-    script: 'index.js',
+    script: 'crawler.js',
     watch: false
-
   }],
 
 
