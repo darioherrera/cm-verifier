@@ -2,24 +2,38 @@ const CsvReader = require('promised-csv');
 const reader = new CsvReader();
 var Crawler = require("crawler");
 const repositoryModel = require("./items/repository");
-const fsp = require("fs/promises");
 
+const Typesense = require("typesense");
+const typeSenseClient = new Typesense.Client({
+    'nodes': [{
+        'host': 'localhost',
+        'port': '8108',
+        'protocol': 'http'
+    }],
+    'apiKey': 'cUUacDg1Jpnfwzg9jSxQHwNtldwW4BCPG53bMoU8cC1RfPBw',
+    'connectionTimeoutSeconds': 2
+})
 
-const extract = async (error, res, done) => {
+const extract = async(error, res, done) => {
     if (error) {
         console.log(error);
+        return null;
     }
-    else {
+    try {
         let $ = res.$;
-        let repo = await repositoryModel.parse($, res.options.url);
+        let repo = await repositoryModel.parse($, res.options.url, res.options.code);
         if (repo.valid) {
-            await fsp.appendFile('output.json', JSON.stringify(repo));
-        } else {
-            await fsp.appendFile('error.json', JSON.stringify(repo));
+            console.log(res.options.url);
+            await typeSenseClient.collections('repository').documents().create(repo)
         }
+        done();
     }
-    done();
+    catch (error) {
+        console.log(error);
+    }
+
 }
+
 
 /*  
 Crawler configuration
@@ -32,10 +46,10 @@ const c = new Crawler({
 });
 
 const crawlUrl = (item) => {
-    c.queue({ uri: item[0], url: item[0] });
+    c.queue({ uri: item[0], url: item[0], code: item[1] });
 }
 
-(async function () {
+(async function() {
     reader.on("row", crawlUrl);
     reader.read("./input/pagina1.csv");
 })();
