@@ -10,7 +10,6 @@ const headers = ['name', 'description', 'url', 'home', 'gmt_offset', 'timezone_s
 csvStream = format({ headers, quoteColumns: [true, true, true, true, true, true] });
 csvStream.pipe(writeStream);
 
-
 var handleRequest = async (url) => {
     try {
         let body = await got(url).json();
@@ -24,10 +23,6 @@ var handleRequest = async (url) => {
         }
     }
 };
-
-
-
-
 (async () => {
     fs.createReadStream(path.resolve(__dirname, 'input', 'pagina1.csv'))
         .pipe(csv.parse({ headers: true }))

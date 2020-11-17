@@ -14,7 +14,7 @@ const typeSenseClient = new Typesense.Client({
     'connectionTimeoutSeconds': 2
 })
 
-const extract = async(error, res, done) => {
+const extract = async (error, res, done) => {
     if (error) {
         console.log(error);
         return null;
@@ -49,7 +49,7 @@ const crawlUrl = (item) => {
     c.queue({ uri: item[0], url: item[0], code: item[1] });
 }
 
-(async function() {
+(async function () {
     reader.on("row", crawlUrl);
     reader.read("./input/pagina1.csv");
 })();
