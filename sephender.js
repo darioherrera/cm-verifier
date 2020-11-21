@@ -1,55 +1,36 @@
-const CsvReader = require('promised-csv');
-const reader = new CsvReader();
-var Crawler = require("crawler");
-const repositoryModel = require("./items/repository");
+const fs = require('fs');
+const path = require('path');
+const csv = require('fast-csv');
+const _ = require("lodash");
 
 const Typesense = require("typesense");
 const typeSenseClient = new Typesense.Client({
     'nodes': [{
-        'host': 'localhost',
-        'port': '8108',
+        'host': 'typesense.wabisabi.red',
+        'port': '80',
         'protocol': 'http'
     }],
     'apiKey': 'cUUacDg1Jpnfwzg9jSxQHwNtldwW4BCPG53bMoU8cC1RfPBw',
     'connectionTimeoutSeconds': 2
-})
-
-const extract = async (error, res, done) => {
-    if (error) {
-        console.log(error);
-        return null;
-    }
-    try {
-        let $ = res.$;
-        let repo = await repositoryModel.parse($, res.options.url, res.options.code);
-        if (repo.valid) {
-            console.log(res.options.url);
-            await typeSenseClient.collections('repository').documents().create(repo)
-        }
-        done();
-    }
-    catch (error) {
-        console.log(error);
-    }
-
-}
-
-
-/*  
-Crawler configuration
-*/
-const c = new Crawler({
-    maxConnections: 5,
-    rateLimit: 2000,
-    // This will be called for each crawled page
-    callback: extract
 });
 
-const crawlUrl = (item) => {
-    c.queue({ uri: item[0], url: item[0], code: item[1] });
-}
 
-(async function () {
-    reader.on("row", crawlUrl);
-    reader.read("./input/pagina1.csv");
+(async () => {
+    fs.createReadStream(path.resolve(__dirname, 'input', 'metadata.csv'))
+        .pipe(csv.parse({ headers: true }))
+        // pipe the parsed input into a csv formatter
+        .pipe(csv.format({ headers: true }))
+        // Using the transform function from the formatting stream
+        .transform(async (row, next) => {
+            console.log(row)
+            let code = parseInt(row.code);
+            row.code = code;
+            await typeSenseClient.collections('repository').documents().create(row)
+            //  handleRequest(row, i++);
+            _.delay(next, 500);
+        })
+        .on('end', () => {
+            csvStream.end();
+            process.exit();
+        });
 })();
