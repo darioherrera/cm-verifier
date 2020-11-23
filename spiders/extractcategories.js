@@ -1,0 +1,1 @@
+     const categories = await got.get(`${url}/wp-json/wp/v2/categories`).json();
