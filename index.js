@@ -1,11 +1,12 @@
-const typsense = require("./pipelines/typsense");
+const typesense = require("./pipelines/typsense");
 const meta = require("./spiders/metaextract");
 
 (() => {
     const app = {
         apienabled: false, // Verifica los sitios que tengan el api activada
         metaextract: false, // Extrae los metadatos,
-        typesense: true,
+        typesensePipe: true, //Importa los datos en typsense
+        typesenseReset: true, //Reinicia typsense
 
         init: async() => {
             console.log(`Arrancando pipelines y procesos `);
@@ -15,10 +16,13 @@ const meta = require("./spiders/metaextract");
             else if (app.metaextract) {
                 meta.start();
             }
-            else if (app.typesense) {
-                let serverData = typsense.showCurrentTypsense();
+            else if (app.typesensePipe) {
+                let serverData = typesense.showCurrentTypsense();
+                if (app.typesenseReset) {
+                    await typesense.reset();
+                }
                 console.log(serverData);
-                typsense.start();
+                typesense.start();
             }
         },
 

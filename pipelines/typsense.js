@@ -3,6 +3,7 @@ const path = require('path');
 const csv = require('fast-csv');
 const _ = require("lodash");
 const Typesense = require("typesense");
+const { schema } = require("../typesense/repository");
 let typsenseServer = {
     'nodes': [{
         'host': 'typesense.wabisabi.red',
@@ -15,7 +16,6 @@ let typsenseServer = {
 
 const typeSenseClient = new Typesense.Client(typsenseServer);
 const start = () => {
-
     fs.createReadStream(path.resolve(__dirname, '..', 'input/metadata.csv'))
         .pipe(csv.parse({ headers: true }))
         // pipe the parsed input into a csv formatter
@@ -37,11 +37,24 @@ const start = () => {
         })
 }
 
+const reset = async() => {
+    console.log("Reseting typeset collection");
+    try {
+        await typeSenseClient.collections('repository').delete();
+        await typeSenseClient.collections().create(schema);
+    }
+    catch (err) {
+        console.log(err);
+        throw err;
+    }
+}
+
 const showCurrentTypsense = () => {
     return typsenseServer;
 }
 
 module.exports = {
     start,
-    showCurrentTypsense
+    showCurrentTypsense,
+    reset
 }
