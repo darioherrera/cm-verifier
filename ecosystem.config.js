@@ -1,7 +1,7 @@
 module.exports = {
   apps: [{
     name: 'verifier',
-    script: 'metaextract.js',
+    script: 'index.js',
     watch: false
   }],
 

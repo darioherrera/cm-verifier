@@ -1,4 +1,6 @@
-;
+const typsense = require("./pipelines/typsense");
+
+ 
 (() => {
     const app = {
         apienabled: false, // Verifica los sitios que tengan el api activada
@@ -14,7 +16,9 @@
 
             }
             else if (app.typesense) {
-
+                let serverData = typsense.showCurrentTypsense();
+                console.log(serverData);
+                typesense.start();
             }
 
 
@@ -23,6 +27,6 @@
 
     }
 
-
+    //starts the project
     return app.init();
-})()
+})();
