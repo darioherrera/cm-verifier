@@ -11,7 +11,6 @@ csvStream = format({ headers, quoteColumns: [true, true, true, true, true, true,
 csvStream.pipe(writeStream);
 
 var handleRequest = async(row, id) => {
-
     try {
         console.log(row.url)
         let { body } = await got(row.url);
@@ -45,7 +44,8 @@ var handleRequest = async(row, id) => {
         }
     }
 };
-(async() => {
+
+const start = () => {
     var i = 1;
     fs.createReadStream(path.resolve(__dirname, 'input', 'apienabled.csv'))
         .pipe(csv.parse({ headers: true }))
@@ -59,6 +59,11 @@ var handleRequest = async(row, id) => {
         .on('end', () => {
             csvStream.end();
             process.exit();
-        });
+        }).on('error', (error) => {
+            console.log("Error in typsense pipeline: ", error);
+        })
+}
 
-})()
+module.exports = {
+    start
+}

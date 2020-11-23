@@ -15,8 +15,8 @@ let typsenseServer = {
 
 const typeSenseClient = new Typesense.Client(typsenseServer);
 const start = () => {
-  
-    fs.createReadStream(path.resolve(__dirname, 'input', 'metadata.csv'))
+
+    fs.createReadStream(path.resolve(__dirname, '..', 'input/metadata.csv'))
         .pipe(csv.parse({ headers: true }))
         // pipe the parsed input into a csv formatter
         .pipe(csv.format({ headers: true }))
@@ -32,7 +32,7 @@ const start = () => {
             csvStream.end();
             console.log('Process finished');
             process.exit(0);
-        }).on('error', (error)=>{
+        }).on('error', (error) => {
             console.log("Error in typsense pipeline: ", error);
         })
 }

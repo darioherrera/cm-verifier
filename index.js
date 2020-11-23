@@ -1,6 +1,6 @@
 const typsense = require("./pipelines/typsense");
+const meta = require("./spiders/metaextract");
 
- 
 (() => {
     const app = {
         apienabled: false, // Verifica los sitios que tengan el api activada
@@ -13,20 +13,25 @@ const typsense = require("./pipelines/typsense");
                 //run apienabled
             }
             else if (app.metaextract) {
-
+                meta.start();
             }
             else if (app.typesense) {
                 let serverData = typsense.showCurrentTypsense();
                 console.log(serverData);
-                typesense.start();
+                typsense.start();
             }
+        },
 
+        startSpiders: () => {
+
+        },
+
+        startPipeLines: () => {
 
         }
 
 
     }
-
     //starts the project
     return app.init();
 })();
